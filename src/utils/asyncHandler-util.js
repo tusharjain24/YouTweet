@@ -10,6 +10,7 @@ export { asyncHandler };
 // const asyncHandler = (func) => {
 //   () => {};
 // };
+//  const asyncHandler = (func) => () =>{}
 // const asyncHandler = (func) => async () => {};
 
 // When using TRY-CATCH method

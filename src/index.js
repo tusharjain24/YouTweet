@@ -3,12 +3,12 @@ import connectDB from "./db/dbConnection.js";
 
 dotenv.config({ path: "./env" });
 
-app.on("error", (error) => {
-  console.log("Error:", error);
-});
-
 connectDB()
   .then(() => {
+    app.on("error", (error) => {
+      console.log("Error:", error);
+    });
+
     app.listen(process.env.PORT || 8002, () => {
       console.log(`Sever is running at port:${process.env.PORT}`);
     });
