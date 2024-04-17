@@ -1,0 +1,72 @@
+HTTP Crash COURSE
+
+HTTP: Hyper Text Transfer Protocol
+HTTPS: Hyper Text Transfer Protocol Secure
+Difference: In HTTPS there is an extra layer than HTTP where the data is encrypted before sending it and decrypted on the other side. The encrypted data is not readable.
+
+URL: Uniform Resource Locater
+URI: Uniform Resource Identifier
+URN
+All the above are used for location
+
+HTTP Header:
+    Meta Data --> Key-value pair sent along with request and response
+    Headers are also used for caching, authentication, state management (of user)
+
+    Request Header ---> from Client
+    Response Header ---> from Server
+    Representation Header ---> encoding/compression (Because of Network limit of data due to Lag)
+    Payload Header ---> data
+
+Most common Header:
+    Accept (will tell what type of data it will accept, mostly used in servers): Application/JSON
+    User-Agent: will tell from which application the request has come from
+    Authorization: Berear (JWT token)
+    Content-Type:PDF,JPEG,PNG
+    Cookie
+    Cache-Control
+
+CORS:(Cross Origin Resource Sharing)
+    Access-Control-Allow-Origin
+    Access-Control-Allow-Credentials
+    Access-Control-Allow-Method
+
+Security:
+    Cross-Origin-Encoder-Policy
+    Cross-Origin-Opens-Policy
+    Content-Security-Policy
+    X-XSS-Protection
+
+HTTP Methods:
+    Basic set of operations that can be used to interact with server
+
+    1.GET : retrieve a resource 
+    2.POST: interact with resource (mostly add)
+    3.PUT:replace a resource
+    4.PATCH: change part of resource
+    5.DELETE: remove a resource
+    6.HEAD: No message body (response headers only)
+    7.OPTIONS: What operations are available
+    8.TRACE: loopback test (get same data) , (Mostly used for debugging: send response to a request to know from which proxies are used)
+
+HTTP Status Code
+    . 1xx Informational
+    . 2xx Success
+    . 3xx Redirection
+    . 4xx Client error
+    . 5xx Server error
+
+    Common Standard Status code used and for what they are used (Maybe Different from company to company)
+    100 Continue
+    102 Processing
+    200 OK
+    201 Created
+    203 Accepted
+    307 temporary Redirection
+    308 permanent redirect
+    400 Bad Request
+    401 Unauthorized request
+    402 Payment Required
+    404 Not Found
+    500 Internal Server error
+    504 Gateway TimeOut

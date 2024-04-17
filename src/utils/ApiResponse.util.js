@@ -6,3 +6,5 @@ class ApiResponse {
       (this.success = statusCode < 400); // API server has pre-defined standard status codes
   }
 }
+
+export { ApiResponse };
