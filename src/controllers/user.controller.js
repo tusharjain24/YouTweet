@@ -3,15 +3,16 @@ import { ApiError } from "../utils/ApiError.util.js";
 import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.util.js";
 import { ApiResponse } from "../utils/ApiResponse.util.js";
+
 const registerUser = asyncHandler(async (req, res) => {
   // Get user details from Frontend
-  const { userName, email, fullName, password } = req.body;
-  console.log("email:", email);
+  const { username, email, fullName, password } = req.body;
+  // console.log("req.body:", req.body);
   // Validation that everything is not empty
   // if (fullName === "")
   //   throw new ApiError(400, "full name is required");
   if (
-    [fullName, email, userName, password].some((feild) => {
+    [fullName, email, username, password].some((feild) => {
       feild?.trim() === "";
     })
   ) {
@@ -28,17 +29,27 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 
   // Check if user already exists :Check using username and email
-  const existedUser = User.findOne({
-    $or: [{ userName }, { email }],
+  const existedUser = await User.findOne({
+    $or: [{ username }, { email }],
   });
 
   if (existedUser) {
     throw new ApiError(409, "User with email or username already exists");
   }
 
+  // console.log(req.files);
   // Check for images and check for avatar
   const avatarLocalPath = req.files?.avatar[0]?.path;
-  const coverImageLocalPath = req.files?.coverImage[0]?.path;
+  // const coverImageLocalPath = req.files?.coverImage[0]?.path;
+  let coverImageLocalPath;
+  if (
+    req.files &&
+    Array.isArray(req.files.coverImage) &&
+    req.files.coverImage.length > 0
+  ) {
+    coverImageLocalPath = req.files.coverImage[0].path;
+  }
+
   if (!avatarLocalPath) {
     throw new ApiError(400, "Avatar File is required");
   }
@@ -54,12 +65,12 @@ const registerUser = asyncHandler(async (req, res) => {
   // create User object - create entry in db
   const user = await User.create({
     fullName: fullName,
+    email: email,
     avatar: avatar.url,
-    userName: userName.toLowecase(),
+    username: username.toLowerCase(),
     coverImage: coverImage?.url || "",
     password: password,
   });
-
   // remove password and refresh token field from response
   const createdUser = await User.findById(user._id).select(
     "-password -refreshToken" //Fields that i don't want

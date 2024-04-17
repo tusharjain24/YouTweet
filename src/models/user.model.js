@@ -15,9 +15,9 @@ const userSchema = new mongoose.Schema(
         },
       ],
     },
-    userName: {
+    username: {
       type: String,
-      required: [true, "Username is required"],
+      required: [true, "username is required"],
       unique: true,
       lowercase: true,
       trim: true,
@@ -69,7 +69,7 @@ userSchema.methods.generateAccessToken = async function () {
     {
       _id: this._id,
       email: this.email,
-      userName: this.userName,
+      username: this.username,
       fullName: this.fullName,
     },
     process.env.ACCESS_TOKEN_SECRET,
