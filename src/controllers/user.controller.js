@@ -7,8 +7,8 @@ import { ApiResponse } from "../utils/ApiResponse.util.js";
 const generateAccessAndRefreshToken = async (userId) => {
   try {
     const user = await User.findById(userId);
-    const accessToken = user.generateAccessToken();
-    const refreshToken = user.generateRefreshToken();
+    const accessToken = await user.generateAccessToken();
+    const refreshToken = await user.generateRefreshToken();
     user.refreshToken = refreshToken;
     await user.save({ validateBeforeSave: false });
     return { accessToken, refreshToken };
@@ -106,9 +106,11 @@ const registerUser = asyncHandler(async (req, res) => {
 const loginUser = asyncHandler(async (req, res) => {
   // Get data from the browser(frontend)
   const { username, email, password } = req.body;
+  console.log(username, email, password);
+  console.log("reached here");
 
   // check if the data recieved is not empty
-  if (!username || !email) {
+  if (!username && !email) {
     throw new ApiError(400, "username or email is required");
   }
   if (!password) {
@@ -128,11 +130,11 @@ const loginUser = asyncHandler(async (req, res) => {
 
   // Generate refresh and access tokens
   const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
-    user._id
+    existedUser._id
   );
 
   // remove password and refresh token field from response
-  const loggedInUser = await User.findById(user._id).select(
+  const loggedInUser = await User.findById(existedUser._id).select(
     "-password -refreshToken" //Fields that i don't want
   );
 
