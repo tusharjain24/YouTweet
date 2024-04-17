@@ -4,6 +4,22 @@ import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.util.js";
 import { ApiResponse } from "../utils/ApiResponse.util.js";
 
+const generateAccessAndRefreshToken = async (userId) => {
+  try {
+    const user = await User.findById(userId);
+    const accessToken = user.generateAccessToken();
+    const refreshToken = user.generateRefreshToken();
+    user.refreshToken = refreshToken;
+    await user.save({ validateBeforeSave: false });
+    return { accessToken, refreshToken };
+  } catch (error) {
+    throw new ApiError(
+      500,
+      "Something went wrong while generating refresh and access tokens"
+    );
+  }
+};
+
 const registerUser = asyncHandler(async (req, res) => {
   // Get user details from Frontend
   const { username, email, fullName, password } = req.body;
@@ -87,4 +103,84 @@ const registerUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, createdUser, "User Registered Successfully!"));
 });
 
-export { registerUser };
+const loginUser = asyncHandler(async (req, res) => {
+  // Get data from the browser(frontend)
+  const { username, email, password } = req.body;
+
+  // check if the data recieved is not empty
+  if (!username || !email) {
+    throw new ApiError(400, "username or email is required");
+  }
+  if (!password) {
+    throw new ApiError(400, "password is required");
+  }
+
+  // check the given username and password with those present in database using already defined method iscorrect password
+  const existedUser = await User.findOne({ $or: [{ username }, { email }] });
+  if (!existedUser) {
+    throw new ApiError(404, "User does not exist");
+  }
+  // Password Check
+  const isPasswordValid = await existedUser.isPasswordCorrect(password);
+  if (!isPasswordValid) {
+    throw new ApiError(401, "Invalid user credentials");
+  }
+
+  // Generate refresh and access tokens
+  const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
+    user._id
+  );
+
+  // remove password and refresh token field from response
+  const loggedInUser = await User.findById(user._id).select(
+    "-password -refreshToken" //Fields that i don't want
+  );
+
+  // To make sure the cookies are only modified by server. Frontend can only access it. We do this because cookies are by default modifiabe from frontend as well
+  // send cookies(information to be sent to user)
+  const options = {
+    httpOnly: true,
+    secure: true,
+  };
+
+  res
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(
+      new ApiResponse(
+        200,
+        { user: loggedInUser, accessToken, refreshToken },
+        "user logged in successfully"
+      )
+    );
+
+  // if given credentials are correct then send then go to home page and console log (Login Successful)
+});
+
+const logOutUser = asyncHandler(async (req, res) => {
+  User.findByIdAndUpdate(
+    req.user._id,
+    {
+      $set: {
+        refreshToken: undefined,
+      },
+    },
+    {
+      new: true,
+    }
+  );
+
+  const options = {
+    httpOnly: true,
+    secure: true,
+  };
+
+  res
+    .status(200)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
+    .json(new ApiResponse(200, {}, "user logged out successfully"));
+});
+
+export { registerUser, loginUser, logOutUser };
