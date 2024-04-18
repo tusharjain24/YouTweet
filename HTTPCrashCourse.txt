@@ -42,7 +42,7 @@ HTTP Methods:
 
     1.GET : retrieve a resource 
     2.POST: interact with resource (mostly add)
-    3.PUT:replace a resource
+    3.PUT: replace a resource
     4.PATCH: change part of resource
     5.DELETE: remove a resource
     6.HEAD: No message body (response headers only)
