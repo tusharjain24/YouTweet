@@ -3,7 +3,7 @@ import { ApiError } from "../utils/ApiError.util.js";
 import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.util.js";
 import { ApiResponse } from "../utils/ApiResponse.util.js";
-import { jwt } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 
 const generateAccessAndRefreshToken = async (userId) => {
   try {
@@ -235,4 +235,131 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   }
 });
 
-export { registerUser, loginUser, logOutUser, refreshAccessToken };
+const changeCurrentPassword = asyncHandler(async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+  const user = await User.findById(req.user?._id);
+  const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
+  if (!isPasswordCorrect) {
+    throw new ApiError(400, "Invalid Old Password");
+  }
+  if (oldPassword == newPassword) {
+    throw new ApiError(400, "Old password and new Password cannot be same");
+  }
+  user.password = newPassword;
+  await user.save({ validateBeforeSave: false });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Password has been changed successfully"));
+});
+
+const getCurrentUser = asyncHandler(async (req, res) => {
+  return res
+    .status(200)
+    .json(200, req.user, "Current user fetched successfully");
+});
+
+const updateAccountDetails = asyncHandler(async (req, res) => {
+  const { fullName, email, username } = req.body;
+  if (!(fullName && email && username)) {
+    throw new ApiError(401, "All fields are required");
+  }
+
+  const modifiedFields = [];
+
+  const user = await User.findById(req.user?._id);
+  if (fullName != user.fullName) {
+    user.fullName = fullName;
+    modifiedFields.push("fullName");
+  }
+
+  if (email != user.email) {
+    user.email = email;
+    modifiedFields.push("email");
+  }
+  if (username != user.username) {
+    console.log(user.username);
+    console.log(username);
+    const isUsernameUnique = await User.findOne({ username });
+    if (isUsernameUnique) {
+      throw new ApiError(404, "Username already exists");
+    }
+    user.username = username;
+    modifiedFields.push("username");
+  }
+
+  await user.save({ validateBeforeSave: false });
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "All fields have been update"));
+});
+
+const updateAvatar = asyncHandler(async (req, res) => {
+  const { newAvatarLocalPath } = req.file?.avatar?.path;
+
+  if (!newAvatarLocalPath) {
+    throw new ApiError(400, "avatar file is missing.");
+  }
+
+  const cloudinaryAvatarURI = await uploadOnCloudinary(newAvatarLocalPath);
+
+  if (!cloudinaryAvatarURI) {
+    throw new ApiError(400, "Error while uploading avatar on cloudinary");
+  }
+
+  const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set: {
+        avatar: cloudinaryAvatarURI,
+      },
+    },
+    { new: true } // returns the updated information
+  ).select("-password");
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, { user }, "Avatar has been updated"));
+});
+
+const updateCoverImage = asyncHandler(async (req, res) => {
+  const { newCoverImageLocalPath } = req.file?.avatar?.path;
+
+  if (!newCoverImageLocalPath) {
+    throw new ApiError(400, "Cover Image file is missing.");
+  }
+
+  const cloudinaryCoverImageURI = await uploadOnCloudinary(
+    newCoverImageLocalPath
+  );
+
+  if (!cloudinaryCoverImageURI) {
+    throw new ApiError(400, "Error while uploading avatar on cloudinary");
+  }
+
+  const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set: {
+        coverImage: cloudinaryCoverImageURI,
+      },
+    },
+    { new: true } // returns the updated information
+  ).select("-password");
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, { user }, "Cover Image has been updated"));
+});
+
+export {
+  registerUser,
+  loginUser,
+  logOutUser,
+  refreshAccessToken,
+  changeCurrentPassword,
+  getCurrentUser,
+  updateAccountDetails,
+  updateAvatar,
+  updateCoverImage,
+};
