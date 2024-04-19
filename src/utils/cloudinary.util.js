@@ -1,5 +1,6 @@
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs"; // import file System used to manage file system
+// import { ApiError } from "./ApiError.util";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_NAME,
@@ -27,4 +28,31 @@ const uploadOnCloudinary = async (localFilePath) => {
   }
 };
 
-export { uploadOnCloudinary };
+const deleteOldImage = async (oldImagePath) => {
+  try {
+    if (!oldImagePath) {
+      return null;
+    }
+    console.log("> cloudinary : OldImagePath: " + oldImagePath);
+
+    // Remove the file extension (e.g., '.jpg') from the URL
+    const imageUrlWithoutExtension = oldImagePath.slice(
+      0,
+      oldImagePath.lastIndexOf(".")
+    );
+
+    // Extract the public ID from the URL
+    const publicId = imageUrlWithoutExtension.split("/").pop();
+    console.log("Public ID:", publicId);
+
+    const response = await cloudinary.uploader.destroy(publicId, {
+      resource_type: "image",
+      invalidate: true,
+    });
+    console.log(response.result); // Logs the result of the deletion operation
+  } catch (error) {
+    console.log("Error in deleting old avatar image:", error.message);
+  }
+};
+
+export { uploadOnCloudinary, deleteOldImage };
