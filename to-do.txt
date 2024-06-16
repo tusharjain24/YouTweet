@@ -1,0 +1,1 @@
+Change the code to ensure not to use multer directly upload it directly on cloudinary.

@@ -13,7 +13,7 @@ const uploadOnCloudinary = async (localFilePath) => {
     if (!localFilePath) return null;
     // upload on cloudinary
     const response = await cloudinary.uploader.upload(localFilePath, {
-      resource_type: "auto",
+      resource_type: "image" || "video",
     });
     // File has been uploaded successfully
     console.log(
@@ -29,11 +29,11 @@ const uploadOnCloudinary = async (localFilePath) => {
 };
 
 const deleteOldImage = async (oldImagePath) => {
+  if (!oldImagePath) {
+    return null;
+  }
   try {
-    if (!oldImagePath) {
-      return null;
-    }
-    console.log("> cloudinary : OldImagePath: " + oldImagePath);
+    // console.log("> cloudinary : OldImagePath: " + oldImagePath);
 
     // Remove the file extension (e.g., '.jpg') from the URL
     const imageUrlWithoutExtension = oldImagePath.slice(
@@ -46,7 +46,7 @@ const deleteOldImage = async (oldImagePath) => {
     console.log("Public ID:", publicId);
 
     const response = await cloudinary.uploader.destroy(publicId, {
-      resource_type: "image",
+      resource_type: "image" || "video",
       invalidate: true,
     });
     console.log(response.result); // Logs the result of the deletion operation
