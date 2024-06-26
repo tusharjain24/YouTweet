@@ -7,6 +7,7 @@ import {
 } from "../utils/cloudinary.util.js";
 import { ApiResponse } from "../utils/ApiResponse.util.js";
 import jwt from "jsonwebtoken";
+import Mongoose from "mongoose";
 
 const generateAccessAndRefreshToken = async (userId) => {
   try {
@@ -217,8 +218,8 @@ const logOutUser = asyncHandler(async (req, res) => {
   await User.findByIdAndUpdate(
     req.user._id,
     {
-      $set: {
-        refreshToken: undefined,
+      $unset: {
+        refreshToken: 1,
       },
     },
     {
@@ -239,6 +240,7 @@ const logOutUser = asyncHandler(async (req, res) => {
 });
 
 const changeCurrentPassword = asyncHandler(async (req, res) => {
+  console.log(req.body);
   const { oldPassword, newPassword } = req.body;
   const user = await User.findById(req.user?._id);
   const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
@@ -333,8 +335,8 @@ const updateAvatar = asyncHandler(async (req, res) => {
 });
 
 const updateCoverImage = asyncHandler(async (req, res) => {
-  const { newCoverImageLocalPath } = req.file?.avatar?.path;
-
+  // console.log(req.file);
+  const newCoverImageLocalPath = req.file?.path;
   if (!newCoverImageLocalPath) {
     throw new ApiError(400, "Cover Image file is missing.");
   }
@@ -342,19 +344,20 @@ const updateCoverImage = asyncHandler(async (req, res) => {
   const cloudinaryCoverImageURI = await uploadOnCloudinary(
     newCoverImageLocalPath
   );
+  // console.log(cloudinaryCoverImageURI);
 
   if (!cloudinaryCoverImageURI) {
     throw new ApiError(400, "Error while uploading avatar on cloudinary");
   }
 
   const user = await User.findById(req.user?._id).select("-password");
-  const oldCoverImagePath = user?.avatar;
+  const oldCoverImagePath = user?.coverImage;
 
   const updatedUser = await User.findByIdAndUpdate(
     req.user?._id,
     {
       $set: {
-        coverImage: cloudinaryCoverImageURI,
+        coverImage: cloudinaryCoverImageURI.url,
       },
     },
     { new: true } // returns the updated information
@@ -370,6 +373,7 @@ const updateCoverImage = asyncHandler(async (req, res) => {
 
 const getUserChannelProfile = asyncHandler(async (req, res) => {
   const { username } = req.params;
+  // console.log(username);
   if (!username?.trim()) {
     throw new ApiError(400, "username is missing");
   }
@@ -377,14 +381,14 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
   const channel = await User.aggregate([
     {
       $match: {
-        username: username?.toLowerCase,
+        username: username?.toLowerCase(),
       },
     },
     {
       $lookup: {
         from: "subscriptions",
         localField: "_id",
-        foriegnField: "channel",
+        foreignField: "channel",
         as: "subscribers",
       },
     },
@@ -392,7 +396,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
       $lookup: {
         from: "subscriptions",
         localField: "_id",
-        foriegnField: "subscriber",
+        foreignField: "subscriber",
         as: "subscribedTo",
       },
     },
@@ -406,7 +410,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
         },
         isSubscribed: {
           $cond: {
-            if: { $in: [req.user?._id, "subscribers.subscriber"] }, // $in operators can be used for both arrays and objects. Here we are using it to look into objects
+            if: { $in: [req.user?._id, "$subscribers.subscriber"] }, // $in operators can be used for both arrays and objects. Here we are using it to look into objects
             then: true,
             else: false,
           },
@@ -438,6 +442,57 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     );
 });
 
+const getUserWatchHistory = asyncHandler(async (req, res) => {
+  console.log(req.user);
+  const user = await User.aggregate([
+    {
+      $match: {
+        _id: new Mongoose.Types.ObjectId(req.user._id),
+      },
+    },
+    {
+      $lookup: {
+        from: "videos",
+        localField: "watchHistory",
+        foreignField: "_id",
+        as: "watchHistory",
+        pipeline: [
+          {
+            $lookup: {
+              from: "users",
+              localField: "owner",
+              foreignField: "_id",
+              as: "owner",
+              pipeline: [
+                {
+                  $project: {
+                    fullName: 1,
+                    username: 1,
+                    avatar: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $addFields: {
+              owner: {
+                $first: "$owner",
+              },
+            },
+          },
+        ],
+      },
+    },
+  ]);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, user[0].watchHistory, "User's Watch History fetched")
+    );
+});
+
 export {
   registerUser,
   loginUser,
@@ -449,4 +504,5 @@ export {
   updateAvatar,
   updateCoverImage,
   getUserChannelProfile,
+  getUserWatchHistory,
 };
