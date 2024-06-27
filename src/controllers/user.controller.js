@@ -493,6 +493,22 @@ const getUserWatchHistory = asyncHandler(async (req, res) => {
     );
 });
 
+const deleteUserAccount = asyncHandler(async (req, res) => {
+  // console.log(req.user);
+  const userId = req.user?.id;
+
+  if (!userId) {
+    throw new ApiError(400, "user not found");
+  }
+
+  const userDeleted = await User.deleteOne({ _id: userId });
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, userDeleted, "User has been deleted successfully")
+    );
+});
+
 export {
   registerUser,
   loginUser,
@@ -505,4 +521,5 @@ export {
   updateCoverImage,
   getUserChannelProfile,
   getUserWatchHistory,
+  deleteUserAccount,
 };
