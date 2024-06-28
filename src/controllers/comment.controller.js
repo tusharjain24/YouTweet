@@ -1,26 +1,19 @@
-// import { cloudinary } from "../utils/cloudinary.util.js";
-// import { multer } from "../middleware/multer.middleware.js";
-// import { asyncHandler } from "../utils/asyncHandler.util.js";
-
-// const channelRoute = Router();
-// Upload a video
-// Delete a video
-// Archive a video
-// Home
-// Playlist
-// Videos
-// Channel Url creation
-// Filter options
-
-
-import { asyncHandler } from "../utils/asyncHandler.util.js";
-import { ApiError } from "../utils/ApiError.util.js";
+import mongoose from "mongoose";
 import { Comment } from "../models/comment.model.js";
+import { ApiError } from "../utils/ApiError.util.js";
 import { ApiResponse } from "../utils/ApiResponse.util.js";
+import { asyncHandler } from "../utils/asyncHandler.util.js";
+
+const getVideoComments = asyncHandler(async (req, res) => {
+  //TODO: get all comments for a video
+  const { videoId } = req.params;
+  const { page = 1, limit = 10 } = req.query;
+});
 
 const addComment = asyncHandler(async (req, res) => {
-
+  // TODO: add a comment to a video
   // Get data from the browser(frontend)
+  const { videoId } = req.params;
   const { content, video, owner } = req.body;
 
   // Check if the user is logged in
@@ -53,4 +46,12 @@ const addComment = asyncHandler(async (req, res) => {
     });
 });
 
-export { addComment };
+const updateComment = asyncHandler(async (req, res) => {
+  // TODO: update a comment
+});
+
+const deleteComment = asyncHandler(async (req, res) => {
+  // TODO: delete a comment
+});
+
+export { getVideoComments, addComment, updateComment, deleteComment };
