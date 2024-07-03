@@ -32,8 +32,8 @@ const getAllVideos = asyncHandler(async (req, res) => {
     sort[sortBy] = sortType === "desc" ? -1 : 1;
   }
 
-  const videos = await Video.find()
-    .sort()
+  const videos = await Video.find(filter)
+    .sort(sort)
     .skip((page - 1) * limit)
     .limit(limit);
 
