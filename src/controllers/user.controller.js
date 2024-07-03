@@ -284,8 +284,8 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
     modifiedFields.push("email");
   }
   if (username != user.username) {
-    console.log(user.username);
-    console.log(username);
+    // console.log(user.username);
+    // console.log(username);
     const isUsernameUnique = await User.findOne({ username });
     if (isUsernameUnique) {
       throw new ApiError(404, "Username already exists");
