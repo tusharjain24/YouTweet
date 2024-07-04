@@ -1,9 +1,10 @@
 import { asyncHandler } from "../utils/asyncHandler.util.js";
 import { ApiError } from "../utils/ApiError.util.js";
 import { User } from "../models/user.model.js";
+import { Video } from "../models/video.model.js";
 import {
   uploadOnCloudinary,
-  deleteOldImage,
+  deleteOldMedia,
 } from "../utils/cloudinary.util.js";
 import { ApiResponse } from "../utils/ApiResponse.util.js";
 import jwt from "jsonwebtoken";
@@ -262,7 +263,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 const getCurrentUser = asyncHandler(async (req, res) => {
   return res
     .status(200)
-    .json(200, req.user, "Current user fetched successfully");
+    .json(new ApiResponse(200, req.user, "Current user fetched successfully"));
 });
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
@@ -328,7 +329,7 @@ const updateAvatar = asyncHandler(async (req, res) => {
     },
     { new: true }
   ).select("-password -refreshToken");
-  deleteOldImage(oldAvatarImagePath);
+  deleteOldMedia(oldAvatarImagePath);
 
   return res
     .status(200)
@@ -363,7 +364,7 @@ const updateCoverImage = asyncHandler(async (req, res) => {
     },
     { new: true } // returns the updated information
   ).select("-password -refreshToken");
-  deleteOldImage(oldCoverImagePath);
+  deleteOldMedia(oldCoverImagePath);
 
   return res
     .status(200)
@@ -501,8 +502,25 @@ const deleteUserAccount = asyncHandler(async (req, res) => {
   if (!userId) {
     throw new ApiError(400, "user not found");
   }
+  const videos = await Video.find({ owner: userId });
+  if (videos) {
+    for (const video of videos) {
+      await deleteOldMedia(video.videoFile); // Assuming you store the Cloudinary URL in the video document
+      await deleteOldMedia(video.thumbnail); // Assuming you store the Cloudinary URL in the video document
+    }
+  }
+  await Video.deleteMany({ _id: userId });
+
+  const user = await User.findOne({ _id: userId });
+
+  await deleteOldMedia(user?.avatar);
+
+  if (user?.coverImage) {
+    await deleteOldMedia(user?.coverImage);
+  }
 
   const userDeleted = await User.deleteOne({ _id: userId });
+
   return res
     .status(200)
     .json(
