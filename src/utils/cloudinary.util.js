@@ -11,48 +11,62 @@ cloudinary.config({
 const uploadOnCloudinary = async (localFilePath) => {
   try {
     if (!localFilePath) return null;
-    // upload on cloudinary
+
+    // Determine resource type based on file extension
+    const fileExtension = localFilePath.split(".").pop().toLowerCase();
+    const resourceType = fileExtension === "mp4" ? "video" : "image";
+
+    // Upload on Cloudinary
     const response = await cloudinary.uploader.upload(localFilePath, {
-      resource_type: "image" || "video",
+      resource_type: resourceType,
     });
+
     // File has been uploaded successfully
     console.log(
-      "File has been successfully uploaded on cloudinary",
+      "File has been successfully uploaded on Cloudinary",
       response.url
     );
-    fs.unlinkSync(localFilePath);
+
+    fs.unlinkSync(localFilePath); // Remove the local file
     return response;
   } catch (error) {
-    fs.unlinkSync(localFilePath); //Remove the locally saved temporary file as the upload operation got failed
-    console.log("Error in uploading Files", error);
+    if (fs.existsSync(localFilePath)) {
+      fs.unlinkSync(localFilePath); // Remove the local file if upload fails
+    }
+    console.log("Error in uploading files:", error);
+    throw error; // Rethrow the error to handle it upstream
   }
 };
 
-const deleteOldImage = async (oldImagePath) => {
-  if (!oldImagePath) {
-    return null;
-  }
+const deleteOldMedia = async (oldMediaPath) => {
+  if (!oldMediaPath) return null;
+
   try {
-    // console.log("> cloudinary : OldImagePath: " + oldImagePath);
+    // Extract the file extension to determine resource type
+    const fileExtension = oldMediaPath.split(".").pop().toLowerCase();
+    const resourceType = fileExtension === "mp4" ? "video" : "image";
 
     // Remove the file extension (e.g., '.jpg') from the URL
-    const imageUrlWithoutExtension = oldImagePath.slice(
+    const mediaUrlWithoutExtension = oldMediaPath.slice(
       0,
-      oldImagePath.lastIndexOf(".")
+      oldMediaPath.lastIndexOf(".")
     );
 
     // Extract the public ID from the URL
-    const publicId = imageUrlWithoutExtension.split("/").pop();
+    const publicId = mediaUrlWithoutExtension.split("/").pop();
     console.log("Public ID:", publicId);
 
     const response = await cloudinary.uploader.destroy(publicId, {
-      resource_type: "image" || "video",
+      resource_type: resourceType,
       invalidate: true,
     });
-    console.log(response.result); // Logs the result of the deletion operation
+
+    console.log("Response on deleting the media: ", response.result); // Logs the result of the deletion operation
+    return response;
   } catch (error) {
-    console.log("Error in deleting old avatar image:", error.message);
+    console.log("Error in deleting old media:", error.message);
+    throw error; // Rethrow the error to handle it upstream
   }
 };
 
-export { uploadOnCloudinary, deleteOldImage };
+export { uploadOnCloudinary, deleteOldMedia };
