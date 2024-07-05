@@ -46,7 +46,10 @@ const getUserTweets = asyncHandler(async (req, res) => {
     .limit(limit);
 
   if (!tweets || tweets.length === 0) {
-    throw new ApiError(400, "Tweets not found");
+    throw new ApiError(
+      400,
+      "Tweets not found or user has not Tweeted once yet."
+    );
   }
 
   res
@@ -63,7 +66,7 @@ const getUserTweets = asyncHandler(async (req, res) => {
 const updateTweet = asyncHandler(async (req, res) => {
   //TODO: update tweet
   const { content } = req.body;
-  const { userId } = req.user?._id;
+  const userId = req.user?._id;
   const { tweetId } = req.params;
 
   if (!content || content.trim() == "") {
@@ -78,7 +81,7 @@ const updateTweet = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Tweet not found");
   }
 
-  const tweet = await Tweet.findOneAndUpdate(
+  const updatedtweet = await Tweet.findOneAndUpdate(
     { _id: tweetId, owner: userId },
     {
       $set: {
@@ -88,12 +91,21 @@ const updateTweet = asyncHandler(async (req, res) => {
     { new: true }
   );
 
-  res.status(200).json(new ApiResponse(200, tweet, "Tweet has been updated"));
+  if (!updatedtweet) {
+    throw new ApiError(
+      400,
+      "Tweet not found or user doesn't have permission to modify the Tweet"
+    );
+  }
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, updatedtweet, "Tweet has been updated"));
 });
 
 const deleteTweet = asyncHandler(async (req, res) => {
   //TODO: delete tweet
-  const tweetId = req.params;
+  const { tweetId } = req.params;
   if (!tweetId) {
     throw new ApiError(400, "Tweet not found");
   }
@@ -106,13 +118,18 @@ const deleteTweet = asyncHandler(async (req, res) => {
     owner: userId,
   });
 
-  if (!deleteTweet) {
-    throw new ApiError(400, "Something went wrong in deleting the Tweet");
+  if (!deletedTweet) {
+    throw new ApiError(
+      400,
+      "Something went wrong in deleting the Tweet or Tweet does not exist"
+    );
   }
 
   res
     .status(200)
-    .json(200, deletedTweet, "Tweet has been deleted successfully");
+    .json(
+      new ApiResponse(200, deletedTweet, "Tweet has been deleted successfully")
+    );
 });
 
 export { createTweet, getUserTweets, updateTweet, deleteTweet };
