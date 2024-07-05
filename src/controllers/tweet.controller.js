@@ -12,7 +12,7 @@ const createTweet = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Unauthorised Request");
   }
 
-  if (!tweetContent) {
+  if (!tweetContent || tweetContent.trim() == "") {
     throw new ApiError(400, "Tweet is empty.");
   }
 
@@ -66,15 +66,15 @@ const updateTweet = asyncHandler(async (req, res) => {
   const { userId } = req.user?._id;
   const { tweetId } = req.params;
 
-  if (!tweetId) {
-    throw new ApiError(403, "Tweet is empty");
+  if (!content || content.trim() == "") {
+    throw new ApiError(403, "Cannot send empty Tweet");
   }
 
   if (!userId) {
     throw new ApiError(400, "Unauthorised request");
   }
 
-  if (!tweet) {
+  if (!tweetId) {
     throw new ApiError(400, "Tweet not found");
   }
 

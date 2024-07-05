@@ -1,3 +1,4 @@
+import { Comment } from "../models/comment.model.js";
 import { Video } from "../models/video.model.js";
 import { ApiError } from "../utils/ApiError.util.js";
 import { ApiResponse } from "../utils/ApiResponse.util.js";
@@ -180,10 +181,19 @@ const deleteVideo = asyncHandler(async (req, res) => {
   const video = await Video.findOne({ _id: videoId, owner: userId });
   deleteOldMedia(video.thumbnail);
   deleteOldMedia(video.videoFile);
+  const commentsOnVideo = await Comment.deleteMany({ video: videoId });
+  if (!commentsOnVideo) {
+    console.log("No Comments on the video");
+  } else {
+    console.log("Comments have been deleted");
+  }
+
   const videoDeleted = await Video.deleteOne({ _id: videoId, owner: userId });
+
   if (!videoDeleted) {
     throw new ApiError(400, "Error while deleting the video from the database");
   }
+
   return res
     .status(200)
     .json(
