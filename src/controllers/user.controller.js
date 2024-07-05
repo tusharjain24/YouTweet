@@ -166,10 +166,10 @@ const loginUser = asyncHandler(async (req, res) => {
   // console.log("reached here");
 
   // check if the data recieved is not empty
-  if (!username && !email) {
+  if ((!username && !email) || (username.trim() === "" && email.trim() == "")) {
     throw new ApiError(400, "username or email is required");
   }
-  if (!password) {
+  if (!password || password.trim() === "") {
     throw new ApiError(400, "password is required");
   }
 
@@ -244,14 +244,26 @@ const logOutUser = asyncHandler(async (req, res) => {
 const changeCurrentPassword = asyncHandler(async (req, res) => {
   console.log(req.body);
   const { oldPassword, newPassword } = req.body;
+
+  if (
+    [oldPassword, newPassword].some((feild) => {
+      feild?.trim() === "";
+    })
+  ) {
+    throw new ApiError(400, "Old Password and new Password field are required");
+  }
   const user = await User.findById(req.user?._id);
+
   const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
+
   if (!isPasswordCorrect) {
     throw new ApiError(400, "Invalid Old Password");
   }
+
   if (oldPassword == newPassword) {
     throw new ApiError(400, "Old password and new Password cannot be same");
   }
+
   user.password = newPassword;
   await user.save({ validateBeforeSave: false });
 
@@ -268,7 +280,12 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
   const { fullName, email, username } = req.body;
-  if (!(fullName && email && username)) {
+  if (
+    !(fullName && email && username) ||
+    [fullName, email, username].some((feild) => {
+      feild?.trim() === "";
+    })
+  ) {
     throw new ApiError(401, "All fields are required");
   }
 
