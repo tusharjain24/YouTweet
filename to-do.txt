@@ -1,1 +1,8 @@
 Change the code to ensure not to use multer directly upload it directly on cloudinary.
+
+Add limit to the no of comments on a single video by a single user
+
+Add appropriate errors to all the controllers
+
+videocontroller line 161: Throw apierror for something went wrong
+videocontroller line 184: Throw apierror if (deletedComment.deletedCount == 0) {

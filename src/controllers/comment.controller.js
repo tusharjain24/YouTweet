@@ -5,53 +5,137 @@ import { ApiResponse } from "../utils/ApiResponse.util.js";
 import { asyncHandler } from "../utils/asyncHandler.util.js";
 
 const getVideoComments = asyncHandler(async (req, res) => {
-  //TODO: get all comments for a video
   const { videoId } = req.params;
+
+  if (!videoId) {
+    throw new ApiError(400, "Bad Request");
+  }
+
+  //TODO: add limit to get all comments for a video
   const { page = 1, limit = 10 } = req.query;
+
+  const allComments = await Comment.find({ video: videoId });
+
+  if (!allComments) {
+    throw new ApiError(400, "Something went wrong. Comments not fetched!!");
+  }
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, allComments, "Comments fetched successfully!!"));
 });
 
 const addComment = asyncHandler(async (req, res) => {
-  // TODO: add a comment to a video
   // Get data from the browser(frontend)
   const { videoId } = req.params;
-  const { content, video, owner } = req.body;
+  const { content } = req.body;
+  const userId = req.user?._id;
 
-  // Check if the user is logged in
-  if (!owner) {
-    throw new ApiError(400, "Please login to comment!!");
+  if (!userId) {
+    throw new ApiError(400, "Unauthorised Request");
   }
-  // Check if the comment content recieved is not empty and the video is valid
-  if (!content || content.trim() === "" || !video) {
+  if (!videoId) {
+    throw new ApiError(400, "Bad Request");
+  }
+
+  // Check if the comment content recieved is not empty
+  if (!content || content.trim() === "") {
     throw new ApiError(400, "Invalid data!!");
   }
 
-  await Comment.findOneAndUpdate(
-    {
-      owner: owner,
-      video: video
-    }, {
-    $set: { content: content }
-  }, {
-    upsert: true
-  },
-    function (err, result) {
-      if (err) {
-        throw new ApiError(400, err.errmsg);
-      }
-      return res
-        .status(200)
-        .json(
-          new ApiResponse(200, channel[0], "Comment added successfully!!")
-        );
-    });
+  const newComment = await Comment.create({
+    content: content,
+    video: videoId,
+    owner: userId,
+  });
+
+  if (!newComment) {
+    throw new ApiError(400, "Something went wrong. Comment not added!!");
+  }
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, newComment, "Comment added successfully!!"));
 });
 
 const updateComment = asyncHandler(async (req, res) => {
-  // TODO: update a comment
+  // Get data from the browser(frontend)
+  const { commentId } = req.params;
+  const { content } = req.body;
+  const userId = req.user?._id;
+
+  if (!userId) {
+    throw new ApiError(400, "Unauthorised Request");
+  }
+  if (!commentId) {
+    throw new ApiError(400, "Bad Request");
+  }
+
+  // Check if the comment content recieved is not empty
+  if (!content || content.trim() === "") {
+    throw new ApiError(400, "Invalid data!!");
+  }
+
+  const updatedComment = await Comment.findOneAndUpdate(
+    { _id: commentId, owner: userId },
+    {
+      $set: {
+        content: content,
+      },
+    },
+    {
+      new: true,
+    }
+  );
+
+  if (!updatedComment) {
+    throw new ApiError(
+      400,
+      "You are unauthorized or Something went wrong. Comment not updated!!"
+    );
+  }
+
+  res
+    .status(200)
+    .json(
+      new ApiResponse(200, updatedComment, "Comment updated successfully!!")
+    );
 });
 
 const deleteComment = asyncHandler(async (req, res) => {
-  // TODO: delete a comment
+  // Get data from the browser(frontend)
+  const { commentId } = req.params;
+  const userId = req.user?._id;
+
+  if (!userId) {
+    throw new ApiError(400, "Unauthorised Request");
+  }
+  if (!commentId) {
+    throw new ApiError(400, "Bad Request");
+  }
+
+  const deletedComment = await Comment.deleteOne({
+    _id: commentId,
+    owner: userId,
+  });
+
+  console.log(deletedComment);
+
+  if (deletedComment.deletedCount == 0) {
+    throw new ApiError(
+      400,
+      "You are not the owner or error while deleting the comment"
+    );
+  }
+  res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        deletedComment,
+        "Comment has been deleted successfully!!"
+      )
+    );
 });
 
 export { getVideoComments, addComment, updateComment, deleteComment };
