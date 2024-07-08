@@ -8,7 +8,7 @@ const getVideoComments = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
 
   if (!videoId) {
-    throw new ApiError(400, "Bad Request");
+    throw new ApiError(400, "Bad Request: Video not found");
   }
 
   //TODO: add limit to get all comments for a video
@@ -17,7 +17,10 @@ const getVideoComments = asyncHandler(async (req, res) => {
   const allComments = await Comment.find({ video: videoId });
 
   if (!allComments) {
-    throw new ApiError(400, "Something went wrong. Comments not fetched!!");
+    throw new ApiError(
+      400,
+      "Something went wrong. Comments could not be fetched!!"
+    );
   }
 
   return res
@@ -26,7 +29,6 @@ const getVideoComments = asyncHandler(async (req, res) => {
 });
 
 const addComment = asyncHandler(async (req, res) => {
-  // Get data from the browser(frontend)
   const { videoId } = req.params;
   const { content } = req.body;
   const userId = req.user?._id;
@@ -50,7 +52,10 @@ const addComment = asyncHandler(async (req, res) => {
   });
 
   if (!newComment) {
-    throw new ApiError(400, "Something went wrong. Comment not added!!");
+    throw new ApiError(
+      400,
+      "Something went wrong. Comment could not be added!!"
+    );
   }
 
   return res
