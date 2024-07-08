@@ -462,7 +462,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
 });
 
 const getUserWatchHistory = asyncHandler(async (req, res) => {
-  console.log(req.user);
+  // console.log(req.user);
   const user = await User.aggregate([
     {
       $match: {
@@ -505,6 +505,13 @@ const getUserWatchHistory = asyncHandler(async (req, res) => {
     },
   ]);
 
+  if (!user) {
+    throw new ApiError(
+      400,
+      "Bad Request: User does not have permission Watch History cannot be fetched"
+    );
+  }
+
   return res
     .status(200)
     .json(
@@ -522,8 +529,8 @@ const deleteUserAccount = asyncHandler(async (req, res) => {
   const videos = await Video.find({ owner: userId });
   if (videos) {
     for (const video of videos) {
-      await deleteOldMedia(video.videoFile); // Assuming you store the Cloudinary URL in the video document
-      await deleteOldMedia(video.thumbnail); // Assuming you store the Cloudinary URL in the video document
+      await deleteOldMedia(video.videoFile);
+      await deleteOldMedia(video.thumbnail);
     }
   }
   await Video.deleteMany({ _id: userId });
@@ -537,6 +544,13 @@ const deleteUserAccount = asyncHandler(async (req, res) => {
   }
 
   const userDeleted = await User.deleteOne({ _id: userId });
+
+  if (!userDeleted) {
+    throw new ApiError(
+      400,
+      "Bad Request: User not found or User could not be deleted"
+    );
+  }
 
   return res
     .status(200)

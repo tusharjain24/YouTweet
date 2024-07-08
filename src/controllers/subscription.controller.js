@@ -81,7 +81,7 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
   if (!channels) {
     throw new ApiError(400, "User has not subscribed to any other channels");
   }
-  res
+  return res
     .status(200)
     .json(
       new ApiResponse(

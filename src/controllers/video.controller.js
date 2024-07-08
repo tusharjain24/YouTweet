@@ -27,6 +27,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
   if (userId) {
     filter = { owner: userId };
   }
+
   if (query) {
     filter.title = { $regex: query, $options: "i" }; // Case-insensitive regex search on title
   }
@@ -36,15 +37,19 @@ const getAllVideos = asyncHandler(async (req, res) => {
     sort[sortBy] = sortType === "desc" ? -1 : 1;
   }
 
-  const videos = await Video.find(filter)
+  const fetchedVideos = await Video.find(filter)
     .sort(sort)
     .skip((page - 1) * limit)
     .limit(limit);
 
-  if (!videos || videos.length === 0) {
-    throw new ApiError(400, "Videos not found");
+  if (!fetchedVideos || fetchedVideos.length === 0) {
+    throw new ApiError(
+      400,
+      "Videos Not Found Or Something went wrong while Fetching the Videos from the Database"
+    );
   }
-  res
+
+  return res
     .status(200)
     .json(new ApiResponse(200, videos, "Videos have been fetched"));
 });
@@ -89,7 +94,7 @@ const publishAVideo = asyncHandler(async (req, res) => {
   // console.log(videoDuration);
   // console.log("Video URL: ", videoPath.url);
 
-  const video = await Video.create({
+  const videoCreated = await Video.create({
     videoFile: videoPath.url,
     thumbnail: thumbnailPath.url,
     title: title,
@@ -100,27 +105,42 @@ const publishAVideo = asyncHandler(async (req, res) => {
     owner: req.user._id,
   });
 
-  if (!video) {
-    throw new ApiError(400, "Failed to upload the video");
+  if (!videoCreated) {
+    throw new ApiError(400, "Failed to upload the video to the database");
   }
 
-  res
+  return res
     .status(201)
-    .json(new ApiResponse(201, video, "Video published successfully"));
+    .json(new ApiResponse(201, videoCreated, "Video published successfully"));
 });
 
 const getVideoById = asyncHandler(async (req, res) => {
   //TODO: get video by id
   const { videoId } = req.params;
-  console.log(videoId);
+  const user = req.user;
+  // console.log(user);
   if (!videoId) {
     throw new ApiError(403, "Video not found");
   }
-  const video = await Video.findOne({ _id: videoId });
-  if (!video) {
-    throw new ApiError(400, "Video not found");
+  const fetchedVideo = await Video.findById({ _id: videoId });
+  if (!fetchedVideo) {
+    throw new ApiError(400, "Bad Request: Video not found");
   }
-  res.status(200).json(new ApiResponse(200, video, "Video has been fetched"));
+
+  if (!fetchedVideo.isPublished) {
+    throw new ApiError(400, "Video not found(is not published yet)");
+  }
+
+  fetchedVideo.views += 1;
+  await fetchedVideo.save({ validateBeforSave: false });
+  if (!user.watchHistory.includes(videoId)) {
+    user.watchHistory.push(videoId);
+    await user.save({ validateBeforeSave: false });
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, fetchedVideo, "Video has been fetched"));
 });
 
 const updateVideo = asyncHandler(async (req, res) => {
@@ -160,7 +180,14 @@ const updateVideo = asyncHandler(async (req, res) => {
     { new: true }
   );
 
-  res
+  if (!updatedVideo) {
+    throw new ApiError(
+      400,
+      "Bad Request: Video not found or User cannot modify the video"
+    );
+  }
+
+  return res
     .status(200)
     .json(
       new ApiResponse(200, updatedVideo, "Video Details have been updated")
@@ -191,7 +218,10 @@ const deleteVideo = asyncHandler(async (req, res) => {
   const videoDeleted = await Video.deleteOne({ _id: videoId, owner: userId });
 
   if (!videoDeleted) {
-    throw new ApiError(400, "Error while deleting the video from the database");
+    throw new ApiError(
+      400,
+      "Bad Request: Video not found or User cannot modify the video"
+    );
   }
 
   return res
@@ -207,7 +237,10 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
   // console.log(req.user);
   const video = await Video.findOne({ _id: videoId, owner: userId });
   if (!video) {
-    throw new ApiError(400, "Video not found");
+    throw new ApiError(
+      400,
+      "Bad Request: Video not found or User cannot modify the video"
+    );
   }
 
   if (video.isPublished) {
@@ -215,9 +248,9 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
   } else {
     video.isPublished = true;
   }
-
   await video.save({ validateBeforSave: false });
-  res
+
+  return res
     .status(200)
     .json(new ApiResponse(200, video, "video status has been toggled"));
 });

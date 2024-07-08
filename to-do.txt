@@ -1,8 +1,12 @@
-Change the code to ensure not to use multer directly upload it directly on cloudinary.
+- Change the code to ensure not to use multer directly upload it directly on cloudinary.
 
-Add limit to the no of comments on a single video by a single user
+- Add limit to the no of comments on a single video by a single user
 
-Add appropriate errors to all the controllers
+- Add appropriate errors to all the controllers
 
-videocontroller line 161: Throw apierror for something went wrong
-videocontroller line 184: Throw apierror if (deletedComment.deletedCount == 0) {
+- videocontroller line 161: Throw apierror for something went wrong
+- videocontroller line 184: Throw apierror if (deletedComment.deletedCount == 0) 
+
+- Add a boolean variable to the user's schema to give user the option of whether he/she wants to keep track of their watch history.
+
+- Add the functionality to track if a user has watched a video more than 40% then increment the view count.

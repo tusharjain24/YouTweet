@@ -23,7 +23,7 @@ const createPlaylist = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Something went wrong While creating a playlist");
   }
 
-  res
+  return res
     .status(200)
     .json(new ApiResponse(200, createdPlaylist, "Playlist has been created"));
 });
@@ -42,7 +42,7 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Playlists not found");
   }
 
-  res
+  return res
     .status(200)
     .json(
       new ApiResponse(200, userPlaylists, "User's Playlists have been fetched")
@@ -63,7 +63,7 @@ const getPlaylistById = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Playlist not found in the database");
   }
 
-  res
+  return res
     .status(200)
     .json(new ApiResponse(200, fetchedPlaylist, "Playlist has been fetched"));
 });
@@ -92,7 +92,7 @@ const addVideoToPlaylist = asyncHandler(async (req, res) => {
       "Playlist not found or you do not have permission to modify this playlist"
     );
   }
-  res
+  return res
     .status(200)
     .json(
       new ApiResponse(
@@ -132,7 +132,7 @@ const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
     );
   }
 
-  res.status(200).json({
+  return res.status(200).json({
     message: "Video removed from playlist",
     playlist,
   });
@@ -163,7 +163,7 @@ const deletePlaylist = asyncHandler(async (req, res) => {
       "Playlist not found or you do not have permission to delete this playlist"
     );
   }
-  res
+  return res
     .status(200)
     .json(new ApiResponse(200, deletedPlaylist, "Playlist has been deleted"));
 });
@@ -193,7 +193,7 @@ const updatePlaylist = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Something went wrong while updating the playlist");
   }
 
-  res
+  return res
     .status(200)
     .json(new ApiResponse(200, updatedPlaylist, "Playlist has been updated"));
 });

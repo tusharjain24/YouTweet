@@ -20,7 +20,7 @@ const getVideoComments = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Something went wrong. Comments not fetched!!");
   }
 
-  res
+  return res
     .status(200)
     .json(new ApiResponse(200, allComments, "Comments fetched successfully!!"));
 });
@@ -53,7 +53,7 @@ const addComment = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Something went wrong. Comment not added!!");
   }
 
-  res
+  return res
     .status(200)
     .json(new ApiResponse(200, newComment, "Comment added successfully!!"));
 });
@@ -95,7 +95,7 @@ const updateComment = asyncHandler(async (req, res) => {
     );
   }
 
-  res
+  return res
     .status(200)
     .json(
       new ApiResponse(200, updatedComment, "Comment updated successfully!!")
@@ -119,15 +119,15 @@ const deleteComment = asyncHandler(async (req, res) => {
     owner: userId,
   });
 
-  console.log(deletedComment);
+  // console.log(deletedComment);
 
-  if (deletedComment.deletedCount == 0) {
+  if (!deletedComment) {
     throw new ApiError(
       400,
       "You are not the owner or error while deleting the comment"
     );
   }
-  res
+  return res
     .status(200)
     .json(
       new ApiResponse(

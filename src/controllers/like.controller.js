@@ -20,8 +20,10 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
     video: videoId,
     likedBy: userId,
   });
+
   let message;
   let actiontaken;
+
   if (!existingVideoLike) {
     actiontaken = await Like.create({
       video: videoId,
@@ -33,7 +35,7 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
     message = "Video has been unliked by the user";
   }
 
-  res.status(200).json(new ApiResponse(200, actiontaken, message));
+  return res.status(200).json(new ApiResponse(200, actiontaken, message));
 });
 
 const toggleCommentLike = asyncHandler(async (req, res) => {
@@ -67,7 +69,7 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
     message = "Comment has been unliked by the user";
   }
 
-  res.status(200).json(new ApiResponse(200, actiontaken, message));
+  return res.status(200).json(new ApiResponse(200, actiontaken, message));
 });
 
 const toggleTweetLike = asyncHandler(async (req, res) => {
@@ -101,7 +103,7 @@ const toggleTweetLike = asyncHandler(async (req, res) => {
     message = "Tweet has been unliked by the user";
   }
 
-  res.status(200).json(new ApiResponse(200, actiontaken, message));
+  return res.status(200).json(new ApiResponse(200, actiontaken, message));
 });
 
 const getLikedVideos = asyncHandler(async (req, res) => {
@@ -124,7 +126,7 @@ const getLikedVideos = asyncHandler(async (req, res) => {
     );
   }
 
-  res
+  return res
     .status(200)
     .json(
       new ApiResponse(200, likedVideos, "Videos liked by user has been fetched")
