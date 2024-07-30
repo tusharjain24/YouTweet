@@ -8,7 +8,7 @@
 
 
 ## Preview of APIs
-
+Some Screenshot of the API Response are given below:
 * User Login API Response
   
 ![User Login API Response](https://github.com/user-attachments/assets/f3543f0e-3f92-4e12-bb1f-cfdc9fba0bbc)
