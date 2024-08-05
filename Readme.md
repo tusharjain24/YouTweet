@@ -1,6 +1,6 @@
 # YouTweet - Backend
 
-* Devised a back-end system tailored for multimedia engagement.
+* Devised a backend system tailored for multimedia engagement.
 * Enhanced user interaction with videos and tweets.
 * Executed Node.js and Express.js to handle multimedia contents. Integrated with MongoDB for scalable and robust data storage solution.
 * Incorporated technologies such as Multer, MongoDB aggregation pipelines, and Cloudinary to ensure seamless blob data access and storage, enhanced performance and reliability.
