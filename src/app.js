@@ -2,9 +2,17 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { expressLimit } from "./constants.js";
+import { rateLimit } from "express-rate-limit";
 
 const app = express();
 
+const limit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  message: "Rate Limit Exceeded. Please try again in 15 minutes",
+});
+
+app.use(limit);
 // app.use is generally used for middlewares and configurations(to connect Frontend)
 app.use(
   cors({
