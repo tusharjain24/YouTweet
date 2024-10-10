@@ -1,3 +1,6 @@
+// https://www.npmjs.com/package/eslint-plugin-prettier
+// https://eslint.org/docs/latest/use/getting-started
+
 import prettier from "eslint-plugin-prettier";
 import prettierConfig from "eslint-config-prettier";
 
