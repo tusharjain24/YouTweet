@@ -110,8 +110,10 @@ const registerUser = asyncHandler(async (req, res) => {
   // console.log(req.files);
 
   // Check for images and check for avatar
+  // console.log(req.files?.avatar[0]?.path);
   const avatarLocalPath = req.files?.avatar[0]?.path;
   const coverImageLocalPath = req.files?.coverImage[0]?.path;
+  console.log(coverImageLocalPath);
   // let coverImageLocalPath;
   // if (
   //   req.files &&
@@ -201,7 +203,7 @@ const loginUser = asyncHandler(async (req, res) => {
     secure: true,
   };
 
-  res
+  return res
     .status(200)
     .cookie("accessToken", accessToken, options)
     .cookie("refreshToken", refreshToken, options)
@@ -234,7 +236,7 @@ const logOutUser = asyncHandler(async (req, res) => {
     secure: true,
   };
 
-  res
+  return res
     .status(200)
     .clearCookie("accessToken", options)
     .clearCookie("refreshToken", options)
